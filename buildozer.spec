@@ -14,14 +14,14 @@ icon.filename = icon.png
 [android]
 fullscreen = 0
 android.archs = arm64-v8a
-android.allow_backup = True
 android.permissions = WRITE_EXTERNAL_STORAGE
 
-# Set API levels to match what we installed in the workflow
+# API levels are important
 android.api = 33
 android.minapi = 21
 android.ndk_api = 21
 
 [buildozer]
 log_level = 2
-warn_on_root = 1
+# This setting is required by the new build action
+warn_on_root = 0 
