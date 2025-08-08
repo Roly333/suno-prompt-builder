@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
 
-# Let the build tool resolve the best dependency versions
+# Use flexible versions for maximum compatibility with the build server
 requirements = python3,kivy,pyjnius,android,six
 
 orientation = portrait
@@ -14,9 +14,8 @@ icon.filename = icon.png
 
 [android]
 fullscreen = 0
-# Let the build tool choose the best NDK version
-# android.ndk = 25b 
-android.archs = arm64-v8a, armeabi-v7a
+# Build for the modern 64-bit architecture
+android.archs = arm64-v8a
 android.allow_backup = True
 
 # Use the latest stable build toolchain
