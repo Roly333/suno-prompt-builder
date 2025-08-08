@@ -1,4 +1,5 @@
 # main.py
+from kivy.utils import platform
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -189,12 +190,28 @@ class MainLayout(BoxLayout):
         Clipboard.copy(self.prompt_output)
 
     def save_to_file(self):
-        try:
-            with open("suno_prompt.txt", "w") as f:
-                f.write(self.prompt_output)
-            print("File Saved as suno_prompt.txt")
-        except Exception as e:
-            print(f"Error saving file: {e}")
+    # First, check if we are on Android
+    if platform == 'android':
+        from android.permissions import request_permissions, Permission
+        # Request the permission to write to storage
+        request_permissions([Permission.WRITE_EXTERNAL_STORAGE])
+        # Note: This is a basic implementation. A more advanced app would
+        # have a callback to check if the permission was granted before saving.
+        # For our purpose, we'll request it and then proceed.
+
+    try:
+        # On Android, this will save to the app's private storage area
+        from kivy.app import App
+        user_data_dir = App.get_running_app().user_data_dir
+        filepath = f"{user_data_dir}/suno_prompt.txt"
+        
+        with open(filepath, "w") as f:
+            f.write(self.prompt_output)
+        
+        # For desktop, we print a clear message. On mobile, this won't be visible.
+        print(f"File Saved to {filepath}")
+    except Exception as e:
+        print(f"Error saving file: {e}")
 
 class PromptBuilderApp(App):
     # Data lists
