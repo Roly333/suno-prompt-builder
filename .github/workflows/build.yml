@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK with All Fixes
 
 on: [push]
 
@@ -10,12 +10,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Set up Java (JDK)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    # --- THIS IS THE CRUCIAL, DEFINITIVE FIX ---
+    - name: Accept Android SDK Licenses
+      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    - name: Install dependencies
+    - name: Install Buildozer and Dependencies
       run: |
         pip install --upgrade cython setuptools
         pip install buildozer
