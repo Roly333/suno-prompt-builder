@@ -1,4 +1,4 @@
-name: Build APK with Pre-built Action
+name: Build APK With Verified Action
 
 on:
   push:
@@ -6,21 +6,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build the APK
-        uses: anacrolix/kivy-buildozer-action@v1
+      - name: Build with Buildozer (Verified Action)
+        uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          build_dir: .buildozer
+          # This specifies the command to run
+          command: buildozer -v android debug
+          # This tells the action where your spec file is
+          spec_file: buildozer.spec
 
-      - name: Upload the APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Android-APK
-          path: ${{ steps.buildozer.outputs.apk_file }}
+          path: ${{ steps.buildozer.outputs.apk_path }}
