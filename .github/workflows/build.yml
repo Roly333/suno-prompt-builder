@@ -1,4 +1,4 @@
-name: Build APK With Verified Action
+name: Build APK With Verified Action (Corrected)
 
 on:
   push:
@@ -17,13 +17,13 @@ jobs:
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          # This specifies the command to run
+          # This specifies the command to run.
+          # The action will automatically find the buildozer.spec file.
           command: buildozer -v android debug
-          # This tells the action where your spec file is
-          spec_file: buildozer.spec
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Android-APK
+          # This path comes from the output of the build action.
           path: ${{ steps.buildozer.outputs.apk_path }}
