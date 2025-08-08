@@ -15,13 +15,10 @@ icon.filename = icon.png
 fullscreen = 0
 android.archs = arm64-v8a
 android.permissions = WRITE_EXTERNAL_STORAGE
-
-# API levels are important
 android.api = 33
 android.minapi = 21
 android.ndk_api = 21
 
 [buildozer]
 log_level = 2
-# This setting is required by the new build action
-warn_on_root = 0 
+warn_on_root = 0
