@@ -15,11 +15,12 @@ icon.filename = icon.png
 fullscreen = 0
 android.archs = arm64-v8a
 android.allow_backup = True
-# --- THIS IS THE CRUCIAL NEW LINE ---
-android.accept_sdk_license = True
 android.permissions = WRITE_EXTERNAL_STORAGE
 
-p4a.branch = master
+# Set API levels to match what we installed in the workflow
+android.api = 33
+android.minapi = 21
+android.ndk_api = 21
 
 [buildozer]
 log_level = 2
