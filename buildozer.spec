@@ -17,6 +17,7 @@ android.archs = arm64-v8a
 android.allow_backup = True
 # --- THIS IS THE CRUCIAL NEW LINE ---
 android.accept_sdk_license = True
+android.permissions = WRITE_EXTERNAL_STORAGE
 
 p4a.branch = master
 
