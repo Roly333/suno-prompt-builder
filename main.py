@@ -1,14 +1,15 @@
 # main.py
-from kivy.utils import platform
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.spinner import Spinner
+from kivy.uix.popup import Popup
 from kivy.properties import StringProperty, BooleanProperty, ObjectProperty
 from kivy.core.clipboard import Clipboard
 from kivy.metrics import dp
+from kivy.utils import platform
 
 class MainLayout(BoxLayout):
     prompt_output = StringProperty('')
@@ -21,7 +22,8 @@ class MainLayout(BoxLayout):
         self.populate_influences()
         self.populate_enhancements()
         self.populate_structure_blocks()
-
+        
+        # Bind events directly in Python for reliability
         self.ids.influences_toggle.ids.checkbox.bind(active=self.update_prompt)
         self.ids.vocalists_toggle.ids.checkbox.bind(active=self.toggle_vocalists)
         self.ids.structure_toggle.ids.checkbox.bind(active=self.toggle_structure)
@@ -33,13 +35,9 @@ class MainLayout(BoxLayout):
         container = self.ids.influences_grid
         for tag in App.get_running_app().influence_tags:
             box = BoxLayout(size_hint_y=None, height=dp(30))
-            cb = CheckBox(size_hint_x=None, width=dp(48))
-            cb.bind(active=self.update_prompt)
-            # MODIFICATION: Added font_size to the label
-            label = Label(text=tag, halign='left', valign='middle', font_size='16sp')
-            label.bind(width=lambda i, w: setattr(i, 'text_size', (w, None)))
-            box.add_widget(cb)
-            box.add_widget(label)
+            cb = CheckBox(size_hint_x=None, width=dp(48)); cb.bind(active=self.update_prompt)
+            label = Label(text=tag, halign='left', valign='middle', font_size='16sp'); label.bind(width=lambda i, w: setattr(i, 'text_size', (w, None)))
+            box.add_widget(cb); box.add_widget(label)
             container.add_widget(box)
             self.influence_checkboxes[tag] = cb
 
@@ -49,19 +47,15 @@ class MainLayout(BoxLayout):
             box = BoxLayout(size_hint_y=None, height=dp(30))
             cb = CheckBox(size_hint_x=None, width=dp(48), active=(tag in App.get_running_app().default_enhancements))
             cb.bind(active=self.update_prompt)
-            # MODIFICATION: Added font_size to the label
-            label = Label(text=tag, halign='left', valign='middle', font_size='16sp')
-            label.bind(width=lambda i, w: setattr(i, 'text_size', (w, None)))
-            box.add_widget(cb)
-            box.add_widget(label)
+            label = Label(text=tag, halign='left', valign='middle', font_size='16sp'); label.bind(width=lambda i, w: setattr(i, 'text_size', (w, None)))
+            box.add_widget(cb); box.add_widget(label)
             container.add_widget(box)
             self.enhancement_checkboxes[tag] = cb
 
     def populate_structure_blocks(self):
         container = self.ids.available_structure_list
         for tag in App.get_running_app().structure_tags:
-            btn = Button(text=tag, size_hint_y=None, height=dp(36))
-            btn.bind(on_release=self.add_to_structure)
+            btn = Button(text=tag, size_hint_y=None, height=dp(36)); btn.bind(on_release=self.add_to_structure)
             container.add_widget(btn)
 
     def update_prompt(self, *args):
@@ -117,7 +111,6 @@ class MainLayout(BoxLayout):
         opts = {'Gender': app.gender_options, 'Accent': app.accent_options, 'Style': app.vocal_style_options, 'Delivery': app.delivery_options, 'Delivery 2': app.delivery_options, 'Emotion': app.emotion_options}
         for key, values in opts.items():
             h_box = BoxLayout(size_hint_y=None, height=dp(44))
-            # MODIFICATION: Added font_size to the label
             h_box.add_widget(Label(text=key, size_hint_x=0.4, font_size='16sp'))
             s = Spinner(text='', values=values, size_hint_x=0.6)
             s.bind(text=self.update_prompt)
@@ -168,13 +161,11 @@ class MainLayout(BoxLayout):
     def move_structure_item(self, direction):
         if not self.selected_structure_item:
             return
-
         children = list(reversed(self.ids.user_structure_list.children))
         try:
             index = children.index(self.selected_structure_item)
         except ValueError:
             return
-        
         if direction == 'up' and index > 0:
             swap_index = index - 1
             children[index].text, children[swap_index].text = children[swap_index].text, children[index].text
@@ -183,38 +174,50 @@ class MainLayout(BoxLayout):
             swap_index = index + 1
             children[index].text, children[swap_index].text = children[swap_index].text, children[index].text
             self.select_structure_item(children[swap_index])
-        
         self.update_prompt()
 
     def copy_to_clipboard(self):
         Clipboard.copy(self.prompt_output)
-
+    
+    # --- MODIFICATION: Robust file saving with permission handling ---
     def save_to_file(self):
-    # First, check if we are on Android
-    if platform == 'android':
-        from android.permissions import request_permissions, Permission
-        # Request the permission to write to storage
-        request_permissions([Permission.WRITE_EXTERNAL_STORAGE])
-        # Note: This is a basic implementation. A more advanced app would
-        # have a callback to check if the permission was granted before saving.
-        # For our purpose, we'll request it and then proceed.
+        if platform == 'android':
+            from android.permissions import request_permissions, Permission
+            def after_permission_request(permissions, grants):
+                if all(grants):
+                    self._save_file()
+                else:
+                    self.show_popup("Permission Denied", "Cannot save file without storage permission.")
+            request_permissions([Permission.WRITE_EXTERNAL_STORAGE], after_permission_request)
+        else:
+            self._save_file()
 
-    try:
-        # On Android, this will save to the app's private storage area
-        from kivy.app import App
-        user_data_dir = App.get_running_app().user_data_dir
-        filepath = f"{user_data_dir}/suno_prompt.txt"
-        
-        with open(filepath, "w") as f:
-            f.write(self.prompt_output)
-        
-        # For desktop, we print a clear message. On mobile, this won't be visible.
-        print(f"File Saved to {filepath}")
-    except Exception as e:
-        print(f"Error saving file: {e}")
+    def _save_file(self):
+        try:
+            from kivy.app import App
+            from os.path import join
+            
+            # This path is accessible via the phone's file browser
+            from android.storage import primary_external_storage_path
+            dir = primary_external_storage_path()
+            filepath = join(dir, 'Download', 'suno_prompt.txt')
+
+            with open(filepath, "w") as f:
+                f.write(self.prompt_output)
+            
+            self.show_popup("Success", f"Prompt saved to your Downloads folder as suno_prompt.txt")
+        except Exception as e:
+            self.show_popup("Error", f"Failed to save file: {e}")
+
+    def show_popup(self, title, message):
+        popup = Popup(title=title,
+                      content=Label(text=message),
+                      size_hint=(0.8, 0.4))
+        popup.open()
+
 
 class PromptBuilderApp(App):
-    # Data lists
+    # Data lists...
     genre_options = ["", "DnB", "Ambient", "Jungle"]; sub_genre_options = ["", "Neuro", "Technical", "Minimal", "Liquid", "Jump Up", "Deep", "Raw", "1990's"]
     bass_type_options = ["", "Reese", "Growl", "FM", "Wobble", "Morphing", "Filtered", "Granular", "Modulated"]; drum_type_options = ["", "Rolling", "Technical", "Complex", "Stepped", "Machine", "Crushed", "Layered", "Processed"]
     break_type_options = ["", "Amen", "Think", "Apache", "Pitched", "Chopped", "Reversed", "Stacked", "Micro"]; sub_type_options = ["", "Clean", "Moving", "Pulsing", "Heavy", "Warm", "Deep", "Distorted", "Square"]
