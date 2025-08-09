@@ -1,4 +1,4 @@
-name: Build APK (Definitive Final)
+name: Build Android APK (Definitive Final)
 
 on:
   push:
@@ -10,26 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository
-      # MODIFICATION: Added persist-credentials: false to prevent git config issues.
+      # Step 1: Check out your repository's code
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Step 2: Cache the Buildozer global directory
+      # This makes subsequent builds much faster by reusing downloaded SDK/NDK
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v4
         with:
-          persist-credentials: false
+          path: ~/.buildozer
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-
 
-      # Step 2: Fix any potential permission issues in the workspace
-      - name: Set up file permissions
-        run: sudo chown -R runner:runner .
-
-      # Step 3: Run the verified build action
+      # Step 3: Run the verified, community-trusted build action
       - name: Build with Buildozer (Verified Action)
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
           command: buildozer -v android debug
-          # The spec file is now found automatically
           
-      # Step 4: Upload the finished APK
+      # Step 4: Upload the finished APK file
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
