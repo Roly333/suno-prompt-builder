@@ -1,4 +1,4 @@
-name: Build APK With Verified Action (Corrected)
+name: Build APK (Definitive Final)
 
 on:
   push:
@@ -10,20 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Check out the repository
+      # MODIFICATION: Added persist-credentials: false to prevent git config issues.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
+      # Step 2: Fix any potential permission issues in the workspace
+      - name: Set up file permissions
+        run: sudo chown -R runner:runner .
+
+      # Step 3: Run the verified build action
       - name: Build with Buildozer (Verified Action)
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          # This specifies the command to run.
-          # The action will automatically find the buildozer.spec file.
           command: buildozer -v android debug
-
+          # The spec file is now found automatically
+          
+      # Step 4: Upload the finished APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Android-APK
-          # This path comes from the output of the build action.
           path: ${{ steps.buildozer.outputs.apk_path }}
